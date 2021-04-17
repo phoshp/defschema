@@ -1,10 +1,4 @@
-import glob
-import sys
-import os
 import json
-import uuid
-import tkinter as tk
-from tkinter import ttk
 from jsmin import jsmin
 
 
@@ -54,7 +48,7 @@ def create_definition_schema(name: str, paths: list[str]) -> DefinitionSchema:
 
     for path in paths:
         with open(path) as file:
-            data: dict[str, object] = json.loads(jsmin(file.read()))
+            data: dict = json.loads(jsmin(file.read()))
             schema_recv(data, entries)
 
     return DefinitionSchema(name, entries)
@@ -65,10 +59,12 @@ def schema_recv(data: dict, entries: dict):
         if key in entries:
             entry = entries[key]
 
-            if isinstance(entry, dict):
+            if isinstance(entry, dict) and isinstance(value, dict):
                 schema_recv(value, entry)
-            else:
+            elif isinstance(entry, SchemaEntry):
                 entry.add_candidate(value)
+            else:
+                entries[key] = SchemaEntry(key, [entry, value])
         elif isinstance(value, dict):
             sub = dict()
             schema_recv(value, sub)
